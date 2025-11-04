@@ -69,6 +69,17 @@ export async function updateClientResources(
         }
 
         // Check for duplicate resource names across different sites
+        // Client resources are scoped to a single site, so if a resource with the
+        // same niceId already exists on a different site, this is a naming conflict
+        // that needs to be resolved by the user.
+        //
+        // Example problematic scenario:
+        //   Site A (host1): pangolin.client-resources.app.name: app
+        //   Site B (host2): pangolin.client-resources.app.name: app
+        //   Both would try to use the same niceId, causing confusion and potential data loss.
+        //
+        // Recommended practice:
+        //   Use unique names per site: app-host1, app-host2
         if (existingResource && siteId && existingResource.siteId !== siteId) {
             // Get site information for better error messaging
             const [currentSite] = await trx

@@ -174,6 +174,19 @@ export async function updateProxyResources(
             .limit(1);
 
         // Check for duplicate resource names across different sites
+        // When blueprints are applied from Newt instances (Docker label configuration),
+        // we need to ensure that resource names (niceId) are unique across sites.
+        // If two different sites try to use the same resource name, it would cause
+        // database corruption as they would overwrite each other's configuration.
+        //
+        // Example problematic scenario:
+        //   Site A (host1): pangolin.proxy-resources.syncthing.name: syncthing
+        //   Site B (host2): pangolin.proxy-resources.syncthing.name: syncthing
+        //   Both would try to update the same database record, causing corruption.
+        //
+        // Recommended practice:
+        //   Use unique names per site: syncthing-host1, syncthing-host2
+        //   Or use the site niceId as suffix: syncthing-<site-nice-id>
         if (existingResource && siteId) {
             // Get the site IDs of existing targets for this resource
             const existingTargets = await trx
@@ -216,6 +229,11 @@ export async function updateProxyResources(
 
                 throw new Error(
                     `Duplicate resource name '${resourceNiceId}': This resource name is already in use on site(s) [${existingSiteNames}]. Please use a unique name for this resource on site [${currentSiteName}] to avoid conflicts. Suggestion: rename to '${resourceNiceId}-${currentSite?.niceId || "site"}'.`
+                );
+            } else if (existingTargets.length > 0 && siteId) {
+                // Resource exists with targets from the same site - this is allowed but log for visibility
+                logger.debug(
+                    `Updating existing resource '${resourceNiceId}' with targets from the same site (siteId: ${siteId}). This is normal when multiple containers on the same host share a resource.`
                 );
             }
         }
