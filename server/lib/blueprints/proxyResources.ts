@@ -173,6 +173,53 @@ export async function updateProxyResources(
             )
             .limit(1);
 
+        // Check for duplicate resource names across different sites
+        if (existingResource && siteId) {
+            // Get the site IDs of existing targets for this resource
+            const existingTargets = await trx
+                .select({ siteId: targets.siteId })
+                .from(targets)
+                .where(eq(targets.resourceId, existingResource.resourceId));
+
+            // Check if any existing target belongs to a different site
+            const hasTargetsFromDifferentSite = existingTargets.some(
+                (target) => target.siteId !== siteId
+            );
+
+            if (hasTargetsFromDifferentSite && existingTargets.length > 0) {
+                // Get site information for better error messaging
+                const [currentSite] = await trx
+                    .select({ niceId: sites.niceId, name: sites.name })
+                    .from(sites)
+                    .where(eq(sites.siteId, siteId))
+                    .limit(1);
+
+                const existingSiteIds = [
+                    ...new Set(existingTargets.map((t) => t.siteId))
+                ];
+                const existingSites = await trx
+                    .select({ niceId: sites.niceId, name: sites.name })
+                    .from(sites)
+                    .where(
+                        or(...existingSiteIds.map((id) => eq(sites.siteId, id)))
+                    );
+
+                const existingSiteNames = existingSites
+                    .map((s) => s.name || s.niceId)
+                    .join(", ");
+                const currentSiteName =
+                    currentSite?.name || currentSite?.niceId || "unknown";
+
+                logger.error(
+                    `Duplicate resource name detected: Resource '${resourceNiceId}' (nice ID) already exists with targets on site(s) [${existingSiteNames}], but is being configured again on site [${currentSiteName}]. Each resource name must be unique across all sites. Please rename the resource to avoid conflicts (e.g., '${resourceNiceId}-${currentSite?.niceId || "site"}').`
+                );
+
+                throw new Error(
+                    `Duplicate resource name '${resourceNiceId}': This resource name is already in use on site(s) [${existingSiteNames}]. Please use a unique name for this resource on site [${currentSiteName}] to avoid conflicts. Suggestion: rename to '${resourceNiceId}-${currentSite?.niceId || "site"}'.`
+                );
+            }
+        }
+
         const http = resourceData.protocol == "http";
         const protocol =
             resourceData.protocol == "http" ? "tcp" : resourceData.protocol;

@@ -68,6 +68,35 @@ export async function updateClientResources(
             );
         }
 
+        // Check for duplicate resource names across different sites
+        if (existingResource && siteId && existingResource.siteId !== siteId) {
+            // Get site information for better error messaging
+            const [currentSite] = await trx
+                .select({ niceId: sites.niceId, name: sites.name })
+                .from(sites)
+                .where(eq(sites.siteId, siteId))
+                .limit(1);
+
+            const [existingSite] = await trx
+                .select({ niceId: sites.niceId, name: sites.name })
+                .from(sites)
+                .where(eq(sites.siteId, existingResource.siteId))
+                .limit(1);
+
+            const existingSiteName =
+                existingSite?.name || existingSite?.niceId || "unknown";
+            const currentSiteName =
+                currentSite?.name || currentSite?.niceId || "unknown";
+
+            logger.error(
+                `Duplicate client resource name detected: Resource '${resourceNiceId}' (nice ID) already exists on site [${existingSiteName}], but is being configured again on site [${currentSiteName}]. Each client resource name must be unique across all sites. Please rename the resource to avoid conflicts (e.g., '${resourceNiceId}-${currentSite?.niceId || "site"}').`
+            );
+
+            throw new Error(
+                `Duplicate client resource name '${resourceNiceId}': This resource name is already in use on site [${existingSiteName}]. Please use a unique name for this resource on site [${currentSiteName}] to avoid conflicts. Suggestion: rename to '${resourceNiceId}-${currentSite?.niceId || "site"}'.`
+            );
+        }
+
         if (existingResource) {
             // Update existing resource
             const [updatedResource] = await trx
