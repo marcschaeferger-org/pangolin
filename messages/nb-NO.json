@@ -1430,6 +1430,9 @@
         "and": "og",
         "privacyPolicy": "personvernerklæringen"
     },
+    "signUpMarketing": {
+        "keepMeInTheLoop": "Keep me in the loop with news, updates, and new features by email."
+    },
     "siteRequired": "Område er påkrevd.",
     "olmTunnel": "Olm-tunnel",
     "olmTunnelDescription": "Bruk Olm for klienttilkobling",
