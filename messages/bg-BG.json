@@ -1430,6 +1430,9 @@
         "and": "и",
         "privacyPolicy": "политиката за поверителност"
     },
+    "signUpMarketing": {
+        "keepMeInTheLoop": "Keep me in the loop with news, updates, and new features by email."
+    },
     "siteRequired": "Изисква се сайт.",
     "olmTunnel": "Olm тунел",
     "olmTunnelDescription": "Използвайте Olm за клиентска свързаност",
