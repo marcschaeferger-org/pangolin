@@ -1430,6 +1430,9 @@
         "and": "ve",
         "privacyPolicy": "gizlilik politikası"
     },
+    "signUpMarketing": {
+        "keepMeInTheLoop": "Keep me in the loop with news, updates, and new features by email."
+    },
     "siteRequired": "Site gerekli.",
     "olmTunnel": "Olm Tüneli",
     "olmTunnelDescription": "Müşteri bağlantıları için Olm kullanın",
