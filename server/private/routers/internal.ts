@@ -18,16 +18,26 @@ import * as billing from "#private/routers/billing";
 import * as license from "#private/routers/license";
 
 import { verifySessionUserMiddleware } from "@server/middlewares";
-
+import rateLimit from "express-rate-limit";
 import { internalRouter as ir } from "@server/routers/internal";
 
 export const internalRouter = ir;
+
+// Basic rate limiter: 5 requests per minute per IP for sensitive routes
+const sessionTransferLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    max: 5, // limit each IP to 5 requests per windowMs
+    message: {
+        error: "Too many requests, please try again later."
+    }
+});
 
 internalRouter.get("/org/:orgId/idp", orgIdp.listOrgIdps);
 
 internalRouter.get("/org/:orgId/billing/tier", billing.getOrgTier);
 
-internalRouter.get("/login-page", loginPage.loadLoginPage);
+
+internalRouter.get("/login-page", sessionTransferLimiter, loginPage.loadLoginPage);
 
 internalRouter.post(
     "/get-session-transfer-token",
