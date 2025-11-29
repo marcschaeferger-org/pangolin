@@ -4,6 +4,21 @@ import { cookies, headers as reqHeaders } from "next/headers";
 import { ResponseT } from "@server/types/Response";
 import { pullEnv } from "@app/lib/pullEnv";
 
+
+// ============================================================================
+// SSRF-protection: type guard functions
+// ============================================================================
+function isValidResourceId(value: unknown): value is number {
+    return typeof value === "number" && Number.isInteger(value) && value > 0;
+}
+
+function isValidIdpId(value: unknown): value is number | string {
+    // IDP id may be string or number - restrict to alphanumerics, dashes and underscores
+    if (typeof value === "number") return Number.isInteger(value) && value > 0;
+    if (typeof value === "string") return /^[a-zA-Z0-9\-_]+$/.test(value);
+    return false;
+}
+
 type CookieOptions = {
     path?: string;
     httpOnly?: boolean;
@@ -316,6 +331,9 @@ export async function resourcePasswordProxy(
     resourceId: number,
     request: ResourcePasswordRequest
 ): Promise<ResponseT<ResourcePasswordResponse>> {
+    if (!isValidResourceId(resourceId)) {
+        throw new Error("Invalid resourceId provided to resourcePasswordProxy");
+    }
     const serverPort = process.env.SERVER_EXTERNAL_PORT;
     const url = `http://localhost:${serverPort}/api/v1/auth/resource/${resourceId}/password`;
 
@@ -328,6 +346,9 @@ export async function resourcePincodeProxy(
     resourceId: number,
     request: ResourcePincodeRequest
 ): Promise<ResponseT<ResourcePincodeResponse>> {
+    if (!isValidResourceId(resourceId)) {
+        throw new Error("Invalid resourceId provided to resourcePincodeProxy");
+    }
     const serverPort = process.env.SERVER_EXTERNAL_PORT;
     const url = `http://localhost:${serverPort}/api/v1/auth/resource/${resourceId}/pincode`;
 
@@ -340,6 +361,9 @@ export async function resourceWhitelistProxy(
     resourceId: number,
     request: ResourceWhitelistRequest
 ): Promise<ResponseT<ResourceWhitelistResponse>> {
+    if (!isValidResourceId(resourceId)) {
+        throw new Error("Invalid resourceId provided to resourceWhitelistProxy");
+    }
     const serverPort = process.env.SERVER_EXTERNAL_PORT;
     const url = `http://localhost:${serverPort}/api/v1/auth/resource/${resourceId}/whitelist`;
 
@@ -355,6 +379,9 @@ export async function resourceWhitelistProxy(
 export async function resourceAccessProxy(
     resourceId: number
 ): Promise<ResponseT<ResourceAccessResponse>> {
+    if (!isValidResourceId(resourceId)) {
+        throw new Error("Invalid resourceId provided to resourceAccessProxy");
+    }
     const serverPort = process.env.SERVER_EXTERNAL_PORT;
     const url = `http://localhost:${serverPort}/api/v1/resource/${resourceId}`;
 
@@ -392,6 +419,9 @@ export async function validateOidcUrlCallbackProxy(
     stateCookie: string,
     loginPageId?: number
 ): Promise<ResponseT<ValidateOidcUrlCallbackResponse>> {
+    if (!isValidIdpId(idpId)) {
+        throw new Error("Invalid idpId provided to validateOidcUrlCallbackProxy");
+    }
     const serverPort = process.env.SERVER_EXTERNAL_PORT;
     const url = `http://localhost:${serverPort}/api/v1/auth/idp/${idpId}/oidc/validate-callback${loginPageId ? "?loginPageId=" + loginPageId : ""}`;
 
@@ -409,6 +439,12 @@ export async function generateOidcUrlProxy(
     redirect: string,
     orgId?: string
 ): Promise<ResponseT<GenerateOidcUrlResponse>> {
+    if (!isValidIdpId(idpId)) {
+        throw new Error("Invalid idpId provided to generateOidcUrlProxy");
+    }
+    if (orgId && !/^[a-zA-Z0-9\-_]+$/.test(orgId)) {
+        throw new Error("Invalid orgId provided to generateOidcUrlProxy");
+    }
     const serverPort = process.env.SERVER_EXTERNAL_PORT;
     const url = `http://localhost:${serverPort}/api/v1/auth/idp/${idpId}/oidc/generate-url${orgId ? `?orgId=${orgId}` : ""}`;
 
