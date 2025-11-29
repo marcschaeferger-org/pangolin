@@ -67,10 +67,8 @@ export function createApiServer() {
         apiServer.use(corsWithLoginPageSupport(corsConfig));
     }
 
-    if (!dev) {
-        apiServer.use(helmet());
-        apiServer.use(csrfProtectionMiddleware);
-    }
+    apiServer.use(helmet());
+    apiServer.use(csrfProtectionMiddleware);
 
     apiServer.use(stripDuplicateSesions);
     apiServer.use(cookieParser());
