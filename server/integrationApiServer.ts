@@ -37,8 +37,8 @@ export function createIntegrationApiServer() {
     }
 
     apiServer.use(cookieParser());
-    apiServer.use(lusca.csrf());
     apiServer.use(express.json());
+    apiServer.use(lusca.csrf({ cookie: { name: '_csrf' } }));
 
     apiServer.use(
         "/v1/docs",
