@@ -70,6 +70,6 @@ gerbilRouter.post("/get-config", gerbil.getConfig);
 const badgerRouter = Router();
 internalRouter.use("/badger", badgerRouter);
 
-badgerRouter.post("/verify-session", badger.verifyResourceSession);
+badgerRouter.post("/verify-session", sensitiveRateLimiter, badger.verifyResourceSession);
 
 badgerRouter.post("/exchange-session", badger.exchangeSession);
