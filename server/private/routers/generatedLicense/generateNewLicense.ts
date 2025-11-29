@@ -53,11 +53,21 @@ export async function generateNewLicense(
     try {
         const { orgId } = req.params;
 
+        // Validate orgId - allow only UUIDs or alphanumeric with dash (example pattern)
+        const orgIdPattern = /^[a-zA-Z0-9\-]{1,64}$/; // 64 is arbitrary, change as needed
         if (!orgId) {
             return next(
                 createHttpError(
                     HttpCode.BAD_REQUEST,
                     "Organization ID is required"
+                )
+            );
+        }
+        if (!orgIdPattern.test(orgId)) {
+            return next(
+                createHttpError(
+                    HttpCode.BAD_REQUEST,
+                    "Invalid Organization ID format"
                 )
             );
         }
