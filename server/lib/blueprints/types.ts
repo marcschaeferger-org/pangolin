@@ -57,8 +57,8 @@ export const AuthSchema = z.object({
         .refine((roles) => !roles.includes("Admin"), {
             error: "Admin role cannot be included in sso-roles"
         }),
-    "sso-users": z.array(z.email()).optional().default([]),
-    "whitelist-users": z.array(z.email()).optional().default([]),
+    "sso-users": z.array(z.string().email()).optional().default([]),
+    "whitelist-users": z.array(z.string().email()).optional().default([]),
 });
 
 export const RuleSchema = z.object({
