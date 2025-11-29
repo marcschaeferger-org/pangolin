@@ -53,8 +53,8 @@ export async function generateNewLicense(
     try {
         const { orgId } = req.params;
 
-        // Validate orgId - allow only UUIDs or alphanumeric with dash (example pattern)
-        const orgIdPattern = /^[a-zA-Z0-9\-]{1,64}$/; // 64 is arbitrary, change as needed
+        // Validate orgId - allow only UUID v4 format (same as listGeneratedLicenses.ts)
+        const orgIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
         if (!orgId) {
             return next(
                 createHttpError(
