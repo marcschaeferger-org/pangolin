@@ -130,7 +130,9 @@
         "winston-daily-rotate-file": "5.0.0",
         "ws": "8.18.3",
         "yaml": "^2.8.1",
-        "yargs": "18.0.0",
+        "yargs": "18.0.0",,
+        "@faker-js/faker": "^10.1.0",
+        "lusca": "^1.7.0"
         "zod": "4.1.12",
         "zod-validation-error": "5.0.0"
     },

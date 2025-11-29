@@ -2,6 +2,7 @@ import express from "express";
 import helmet from "helmet";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import lusca from "lusca";
 import config from "@server/lib/config";
 import logger from "@server/logger";
 import {
@@ -20,6 +21,8 @@ export function createInternalServer() {
     internalServer.use(cors());
     internalServer.use(stripDuplicateSesions);
     internalServer.use(cookieParser());
+    // Apply CSRF middleware after cookie parsing
+    internalServer.use(lusca.csrf());
     internalServer.use(express.json());
 
     const prefix = `/api/v1`;
