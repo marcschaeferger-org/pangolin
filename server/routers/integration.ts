@@ -29,6 +29,7 @@ import {
 } from "@server/middlewares";
 import HttpCode from "@server/types/HttpCode";
 import { Router } from "express";
+import rateLimit from "express-rate-limit";
 import { ActionsEnum } from "@server/auth/actions";
 import { logActionAudit } from "#dynamic/middlewares";
 
@@ -39,8 +40,16 @@ unauthenticated.get("/", (_, res) => {
 });
 
 export const authenticated = Router();
-authenticated.use(verifyApiKey);
 
+const authenticatedRateLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+authenticated.use(authenticatedRateLimiter);
+
+authenticated.use(verifyApiKey);
 authenticated.get(
     "/org/checkId",
     verifyApiKeyIsRoot,
