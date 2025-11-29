@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import lusca from "lusca";
 import config from "@server/lib/config";
 import logger from "@server/logger";
 import {
@@ -36,6 +37,7 @@ export function createIntegrationApiServer() {
     }
 
     apiServer.use(cookieParser());
+    apiServer.use(lusca.csrf());
     apiServer.use(express.json());
 
     apiServer.use(

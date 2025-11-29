@@ -1,4 +1,5 @@
 import { Router } from "express";
+import rateLimit from "express-rate-limit";
 import * as gerbil from "@server/routers/gerbil";
 import * as traefik from "@server/routers/traefik";
 import * as resource from "./resource";
@@ -57,9 +58,17 @@ gerbilRouter.post("/get-resolved-hostname", gerbil.getResolvedHostname);
 gerbilRouter.post("/get-config", gerbil.getConfig);
 
 // Badger routes
+// Rate limiter for verifying sessions to prevent brute force and DoS attacks
+const verifySessionRateLimiter = rateLimit({
+    windowMs: 1 * 60 * 1000, // 1 minute window
+    max: 5, // limit each IP to 5 requests per minute
+    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+    message: { error: "Too many requests. Please try again later." }
+});
 const badgerRouter = Router();
 internalRouter.use("/badger", badgerRouter);
 
-badgerRouter.post("/verify-session", badger.verifyResourceSession);
+badgerRouter.post("/verify-session", verifySessionRateLimiter, badger.verifyResourceSession);
 
 badgerRouter.post("/exchange-session", badger.exchangeSession);
