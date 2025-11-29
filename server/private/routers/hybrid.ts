@@ -12,6 +12,7 @@
  */
 
 import { verifySessionRemoteExitNodeMiddleware } from "#private/middlewares/verifyRemoteExitNode";
+import rateLimit from "express-rate-limit";
 import { Router } from "express";
 import {
     db,
@@ -76,6 +77,18 @@ import { checkExitNodeOrg, resolveExitNodes } from "#private/lib/exitNodes";
 import { maxmindLookup } from "@server/db/maxmind";
 import { verifyResourceAccessToken } from "@server/auth/verifyResourceAccessToken";
 import semver from "semver";
+
+
+// Rate limiter for resource access token verification (e.g., max 10 requests per minute per IP)
+const accessTokenVerifyLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    max: 10, // limit each IP to 10 requests per windowMs
+    message: {
+        success: false,
+        error: true,
+        message: "Too many access token verification requests. Please try again later."
+    }
+});
 
 // Zod schemas for request validation
 const getResourceByDomainParamsSchema = z
@@ -1175,6 +1188,7 @@ hybridRouter.post(
 // Validate resource session token
 hybridRouter.post(
     "/resource/:resourceId/access-token/verify",
+    accessTokenVerifyLimiter,
     async (req: Request, res: Response, next: NextFunction) => {
         try {
             const parsedBody = validateResourceAccessTokenBodySchema.safeParse(
