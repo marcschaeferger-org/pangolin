@@ -8,7 +8,8 @@ export function createApiClient({ env }: { env: Env }): AxiosInstance {
         return apiInstance;
     }
 
-    if (typeof window === "undefined") {
+    const w = (globalThis as any).window;
+    if (w === undefined) {
         // @ts-ignore
         return;
     }
@@ -16,9 +17,9 @@ export function createApiClient({ env }: { env: Env }): AxiosInstance {
     let baseURL;
     const suffix = "api/v1";
 
-    if (window.location.port === env.server.nextPort) {
+    if (w.location.port === env.server.nextPort) {
         // this means the user is addressing the server directly
-        baseURL = `${window.location.protocol}//${window.location.hostname}:${env.server.externalPort}/${suffix}`;
+        baseURL = `${w.location.protocol}//${w.location.hostname}:${env.server.externalPort}/${suffix}`;
         axios.defaults.withCredentials = true;
     } else {
         // user is accessing through a proxy

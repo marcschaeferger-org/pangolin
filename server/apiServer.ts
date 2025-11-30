@@ -56,7 +56,7 @@ export function createApiServer() {
         ...(corsConfig?.allowed_headers && {
             allowedHeaders: corsConfig.allowed_headers
         }),
-        credentials: !(corsConfig?.credentials === false)
+        credentials: corsConfig?.credentials !== false
     };
 
     if (build == "oss" || !corsConfig) {
