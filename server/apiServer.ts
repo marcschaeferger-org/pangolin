@@ -68,10 +68,11 @@ export function createApiServer() {
     }
 
     apiServer.use(helmet());
-    apiServer.use(csrfProtectionMiddleware);
 
     apiServer.use(stripDuplicateSesions);
     apiServer.use(cookieParser());
+    // Apply CSRF after cookie parsing for consistency with internalServer
+    apiServer.use(csrfProtectionMiddleware);
     apiServer.use(express.json());
 
     // Add request timeout middleware
