@@ -55,7 +55,9 @@ export const priv = axios.create({
     baseURL: `http://localhost:${process.env.SERVER_INTERNAL_PORT}/api/v1`,
     timeout: 10000,
     headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        // Sent from server-side code only; satisfies CSRF checks for cookie-authenticated internal endpoints
+        "X-CSRF-Token": "x-csrf-protection"
     }
 });
 
