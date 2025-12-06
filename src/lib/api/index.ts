@@ -8,17 +8,17 @@ export function createApiClient({ env }: { env: Env }): AxiosInstance {
         return apiInstance;
     }
 
-    if (typeof window === "undefined") {
-        // @ts-ignore
+    const w = typeof globalThis !== 'undefined' && 'window' in globalThis ? (globalThis as typeof globalThis & { window: Window }).window : undefined;
+    if (typeof w === 'undefined') {
         return;
     }
 
     let baseURL;
     const suffix = "api/v1";
 
-    if (window.location.port === env.server.nextPort) {
+    if (w.location.port === env.server.nextPort) {
         // this means the user is addressing the server directly
-        baseURL = `${window.location.protocol}//${window.location.hostname}:${env.server.externalPort}/${suffix}`;
+        baseURL = `${w.location.protocol}//${w.location.hostname}:${env.server.externalPort}/${suffix}`;
         axios.defaults.withCredentials = true;
     } else {
         // user is accessing through a proxy
@@ -55,7 +55,9 @@ export const priv = axios.create({
     baseURL: `http://localhost:${process.env.SERVER_INTERNAL_PORT}/api/v1`,
     timeout: 10000,
     headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        // WARNING: Using hardcoded CSRF token. This should be replaced with proper per-session token generation for production use.
+        "X-CSRF-Token": "x-csrf-protection"
     }
 });
 

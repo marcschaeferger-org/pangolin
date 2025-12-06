@@ -11,6 +11,7 @@ import {
 } from "@server/middlewares";
 import { internalRouter } from "#dynamic/routers/internal";
 import { stripDuplicateSesions } from "./middlewares/stripDuplicateSessions";
+import { csrfProtectionMiddleware } from "./middlewares/csrfProtection";
 
 const internalPort = config.getRawConfig().server.internal_port;
 
@@ -21,8 +22,8 @@ export function createInternalServer() {
     internalServer.use(cors());
     internalServer.use(stripDuplicateSesions);
     internalServer.use(cookieParser());
-    // Apply CSRF middleware after cookie parsing
-    internalServer.use(lusca.csrf());
+    // Apply CSRF middleware after cookie parsing; it only enforces for cookie-authenticated requests
+    internalServer.use(csrfProtectionMiddleware);
     internalServer.use(express.json());
 
     const prefix = `/api/v1`;

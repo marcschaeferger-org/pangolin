@@ -56,7 +56,7 @@ export function createApiServer() {
         ...(corsConfig?.allowed_headers && {
             allowedHeaders: corsConfig.allowed_headers
         }),
-        credentials: !(corsConfig?.credentials === false)
+        credentials: corsConfig?.credentials !== false
     };
 
     if (build == "oss" || !corsConfig) {
@@ -67,13 +67,12 @@ export function createApiServer() {
         apiServer.use(corsWithLoginPageSupport(corsConfig));
     }
 
-    if (!dev) {
-        apiServer.use(helmet());
-        apiServer.use(csrfProtectionMiddleware);
-    }
+    apiServer.use(helmet());
 
     apiServer.use(stripDuplicateSesions);
     apiServer.use(cookieParser());
+    // Apply CSRF after cookie parsing for consistency with internalServer
+    apiServer.use(csrfProtectionMiddleware);
     apiServer.use(express.json());
 
     // Add request timeout middleware
