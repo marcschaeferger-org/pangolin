@@ -1,6 +1,5 @@
 import express from "express";
 import cors from "cors";
-import cookieParser from "cookie-parser";
 import config from "@server/lib/config";
 import logger from "@server/logger";
 import {
@@ -13,8 +12,8 @@ import helmet from "helmet";
 import swaggerUi from "swagger-ui-express";
 import { OpenApiGeneratorV3 } from "@asteasolutions/zod-to-openapi";
 import { registry } from "./openApi";
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
 import { APP_PATH } from "./lib/consts";
 import yaml from "js-yaml";
 
@@ -35,7 +34,7 @@ export function createIntegrationApiServer() {
         apiServer.use(helmet());
     }
 
-    apiServer.use(cookieParser());
+    // Intentionally no cookie parsing here: integration API is token/API-key based and does not rely on cookies.
     apiServer.use(express.json());
 
     apiServer.use(
