@@ -24,6 +24,12 @@ export async function verifyApiKeyAccess(
         const apiKeyId = req.params.apiKeyId || req.body.apiKeyId;
         const orgId = req.params.orgId;
 
+        if (!apiKeyId) {
+            return next(
+                createHttpError(HttpCode.BAD_REQUEST, "Invalid key ID")
+            );
+        }
+
         if (!userId) {
             return next(
                 createHttpError(HttpCode.UNAUTHORIZED, "User not authenticated")
@@ -33,12 +39,6 @@ export async function verifyApiKeyAccess(
         if (!orgId) {
             return next(
                 createHttpError(HttpCode.BAD_REQUEST, "Invalid organization ID")
-            );
-        }
-
-        if (!apiKeyId) {
-            return next(
-                createHttpError(HttpCode.BAD_REQUEST, "Invalid key ID")
             );
         }
 
