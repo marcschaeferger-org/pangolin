@@ -56,7 +56,7 @@ export const priv = axios.create({
     timeout: 10000,
     headers: {
         "Content-Type": "application/json",
-        // Sent from server-side code only; satisfies CSRF checks for cookie-authenticated internal endpoints
+        // WARNING: Using hardcoded CSRF token. This should be replaced with proper per-session token generation for production use.
         "X-CSRF-Token": "x-csrf-protection"
     }
 });
