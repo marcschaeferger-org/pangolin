@@ -29,8 +29,7 @@ export async function verifyCertificateAccess(
         // Assume user/org access is already verified
         const orgId = req.params.orgId;
         const certId = req.params.certId || req.body?.certId;
-        let domainId =
-            req.params.domainId || req.body?.domainId;
+        let domainId = req.params.domainId || req.body?.domainId;
 
         if (!orgId) {
             return next(
