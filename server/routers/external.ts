@@ -1238,3 +1238,6 @@ authRouter.delete(
     }),
     auth.deleteSecurityKey
 );
+
+// CSRF Token route
+authRouter.get("/csrf-token", auth.getCsrfToken);

@@ -14,3 +14,4 @@ export * from "./validateSetupToken";
 export * from "./changePassword";
 export * from "./checkResourceSession";
 export * from "./securityKey";
+export * from "./getCsrfToken";
