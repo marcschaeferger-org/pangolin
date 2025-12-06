@@ -8,9 +8,8 @@ export function createApiClient({ env }: { env: Env }): AxiosInstance {
         return apiInstance;
     }
 
-    const w = (globalThis as any).window;
-    if (w === undefined) {
-        // @ts-ignore
+    const w = typeof globalThis !== 'undefined' && 'window' in globalThis ? (globalThis as typeof globalThis & { window: Window }).window : undefined;
+    if (typeof w === 'undefined') {
         return;
     }
 
