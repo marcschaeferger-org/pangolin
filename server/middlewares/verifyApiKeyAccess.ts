@@ -12,8 +12,16 @@ export async function verifyApiKeyAccess(
 ) {
     try {
         const userId = req.user!.userId;
-        const apiKeyId =
-            req.params.apiKeyId || req.body.apiKeyId || req.query.apiKeyId;
+        // Do not accept apiKeyId via query parameters due to security concerns
+        if (req.query.apiKeyId) {
+            return next(
+                createHttpError(
+                    HttpCode.BAD_REQUEST,
+                    "Sensitive API key must be provided in the request body, not in query or path parameters"
+                )
+            );
+        }
+        const apiKeyId = req.body.apiKeyId;
         const orgId = req.params.orgId;
 
         if (!userId) {
