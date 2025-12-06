@@ -17,11 +17,11 @@ export async function verifyApiKeyAccess(
             return next(
                 createHttpError(
                     HttpCode.BAD_REQUEST,
-                    "Sensitive API key must be provided in the request body, not in query or path parameters"
+                    "Sensitive API key should not be provided in query parameters"
                 )
             );
         }
-        const apiKeyId = req.body.apiKeyId;
+        const apiKeyId = req.params.apiKeyId || req.body.apiKeyId;
         const orgId = req.params.orgId;
 
         if (!userId) {
