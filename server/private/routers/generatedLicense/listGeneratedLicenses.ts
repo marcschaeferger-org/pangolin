@@ -54,11 +54,13 @@ export async function listSaasLicenseKeys(
     try {
         const { orgId } = req.params;
 
-        if (!orgId) {
+        // Accept orgId if it matches UUID v4 pattern (adjust pattern to fit actual orgId requirements)
+        const orgIdPattern = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/;
+        if (!orgId || !orgIdPattern.test(orgId)) {
             return next(
                 createHttpError(
                     HttpCode.BAD_REQUEST,
-                    "Organization ID is required"
+                    "Organization ID is required and must be a valid UUID"
                 )
             );
         }

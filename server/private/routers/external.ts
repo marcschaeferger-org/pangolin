@@ -233,6 +233,16 @@ authenticated.put(
     verifyOrgAccess,
     verifyUserHasAction(ActionsEnum.createRemoteExitNode),
     logActionAudit(ActionsEnum.createRemoteExitNode),
+    rateLimit({
+        windowMs: 60 * 1000, // 1 minute
+        max: 10, // limit each IP to 10 requests per minute
+        keyGenerator: ipKeyGenerator,
+        handler: (req, res, next) =>
+            next(createHttpError(
+                HttpCode.TooManyRequests,
+                "Too many requests, please try again later."
+            )),
+    }),
     remoteExitNode.createRemoteExitNode
 );
 
