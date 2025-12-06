@@ -17,7 +17,7 @@ export async function verifyApiKeyAccess(
             return next(
                 createHttpError(
                     HttpCode.BAD_REQUEST,
-                    "Sensitive API key should not be provided in query parameters"
+                    "Sensitive API key ID should not be provided in query parameters"
                 )
             );
         }
