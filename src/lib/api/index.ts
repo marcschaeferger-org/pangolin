@@ -79,11 +79,15 @@ export function createApiClient({ env }: { env: Env }): AxiosInstance {
         }
     );
 
-    // Add response interceptor to refresh CSRF token on 403 errors
+    // Add response interceptor to refresh CSRF token on CSRF-specific 403 errors
     apiInstance.interceptors.response.use(
         (response) => response,
         async (error) => {
-            if (error.response?.status === 403 && error.config && !error.config._retry) {
+            const is403 = error.response?.status === 403;
+            const isCsrfError = error.response?.data?.error?.toLowerCase().includes('csrf');
+            const notRetried = !error.config?._retry;
+            
+            if (is403 && isCsrfError && notRetried && error.config) {
                 // Mark request as retried to avoid infinite loops
                 error.config._retry = true;
                 
@@ -91,9 +95,9 @@ export function createApiClient({ env }: { env: Env }): AxiosInstance {
                 csrfToken = await fetchCsrfToken(baseURL);
                 
                 // Retry the request with new token
-                if (csrfToken) {
+                if (csrfToken && apiInstance) {
                     error.config.headers['X-CSRF-Token'] = csrfToken;
-                    return apiInstance!.request(error.config);
+                    return apiInstance.request(error.config);
                 }
             }
             return Promise.reject(error);
