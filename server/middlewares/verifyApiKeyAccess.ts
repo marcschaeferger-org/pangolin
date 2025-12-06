@@ -17,12 +17,18 @@ export async function verifyApiKeyAccess(
             return next(
                 createHttpError(
                     HttpCode.BAD_REQUEST,
-                    "Sensitive API key must be provided in the request body, not in query or path parameters"
+                    "Sensitive API key ID should not be provided in query parameters"
                 )
             );
         }
-        const apiKeyId = req.body.apiKeyId;
+        const apiKeyId = req.params.apiKeyId || req.body.apiKeyId;
         const orgId = req.params.orgId;
+
+        if (!apiKeyId) {
+            return next(
+                createHttpError(HttpCode.BAD_REQUEST, "Invalid key ID")
+            );
+        }
 
         if (!userId) {
             return next(
@@ -33,12 +39,6 @@ export async function verifyApiKeyAccess(
         if (!orgId) {
             return next(
                 createHttpError(HttpCode.BAD_REQUEST, "Invalid organization ID")
-            );
-        }
-
-        if (!apiKeyId) {
-            return next(
-                createHttpError(HttpCode.BAD_REQUEST, "Invalid key ID")
             );
         }
 
