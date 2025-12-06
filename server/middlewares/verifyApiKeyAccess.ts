@@ -13,7 +13,7 @@ export async function verifyApiKeyAccess(
     try {
         const userId = req.user!.userId;
         // Do not accept apiKeyId via query parameters due to security concerns
-        if (req.query.apiKeyId) {
+        if ("apiKeyId" in req.query) {
             return next(
                 createHttpError(
                     HttpCode.BAD_REQUEST,
