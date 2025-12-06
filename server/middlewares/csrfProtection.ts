@@ -13,7 +13,7 @@ export function csrfProtectionMiddleware(
         return next();
     }
 
-    const hasSessionCookie = Boolean((req as any).cookies?.[SESSION_COOKIE_NAME]);
+    const hasSessionCookie = Boolean(req.cookies?.[SESSION_COOKIE_NAME]);
 
     if (!hasSessionCookie) {
         // No session cookie -> CSRF does not apply
