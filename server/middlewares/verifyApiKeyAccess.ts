@@ -12,8 +12,7 @@ export async function verifyApiKeyAccess(
 ) {
     try {
         const userId = req.user!.userId;
-        const apiKeyId =
-            req.params.apiKeyId || req.body.apiKeyId || req.query.apiKeyId;
+        const apiKeyId = req.body.apiKeyId;
         const orgId = req.params.orgId;
 
         if (!userId) {
