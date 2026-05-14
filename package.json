@@ -164,7 +164,7 @@
         "esbuild-node-externals": "1.20.1",
         "eslint": "10.0.3",
         "eslint-config-next": "16.1.7",
-        "postcss": "8.5.8",
+        "postcss": "8.5.10",
         "prettier": "3.8.1",
         "react-email": "5.2.10",
         "tailwindcss": "4.2.2",
