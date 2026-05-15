@@ -19,6 +19,7 @@ import { eq, and } from "drizzle-orm";
 import createHttpError from "http-errors";
 import HttpCode from "@server/types/HttpCode";
 import logger from "@server/logger";
+import { getFirstString } from "@server/lib/requestParams";
 
 export async function verifyCertificateAccess(
     req: Request,
@@ -27,11 +28,15 @@ export async function verifyCertificateAccess(
 ) {
     try {
         // Assume user/org access is already verified
-        const orgId = req.params.orgId;
+        const orgId = getFirstString(req.params.orgId);
         const certId =
-            req.params.certId || req.body?.certId || req.query?.certId;
+            getFirstString(req.params.certId) ||
+            getFirstString(req.body?.certId) ||
+            getFirstString(req.query?.certId);
         let domainId =
-            req.params.domainId || req.body?.domainId || req.query?.domainId;
+            getFirstString(req.params.domainId) ||
+            getFirstString(req.body?.domainId) ||
+            getFirstString(req.query?.domainId);
 
         if (!orgId) {
             return next(
@@ -65,7 +70,7 @@ export async function verifyCertificateAccess(
                 );
             }
 
-            domainId = cert.domainId;
+            domainId = cert.domainId ?? undefined;
             if (!domainId) {
                 return next(
                     createHttpError(

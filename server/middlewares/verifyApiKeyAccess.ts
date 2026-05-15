@@ -6,6 +6,7 @@ import createHttpError from "http-errors";
 import HttpCode from "@server/types/HttpCode";
 import { checkOrgAccessPolicy } from "#dynamic/lib/checkOrgAccessPolicy";
 import { getUserOrgRoleIds } from "@server/lib/userOrgRoles";
+import { getFirstString } from "@server/lib/requestParams";
 
 export async function verifyApiKeyAccess(
     req: Request,
@@ -15,8 +16,10 @@ export async function verifyApiKeyAccess(
     try {
         const userId = req.user!.userId;
         const apiKeyId =
-            req.params.apiKeyId || req.body.apiKeyId || req.query.apiKeyId;
-        const orgId = req.params.orgId;
+            getFirstString(req.params.apiKeyId) ||
+            getFirstString(req.body.apiKeyId) ||
+            getFirstString(req.query.apiKeyId);
+        const orgId = getFirstString(req.params.orgId);
 
         if (!userId) {
             return next(
@@ -104,10 +107,7 @@ export async function verifyApiKeyAccess(
             }
         }
 
-        req.userOrgRoleIds = await getUserOrgRoleIds(
-            req.userOrg.userId,
-            orgId
-        );
+        req.userOrgRoleIds = await getUserOrgRoleIds(req.userOrg.userId, orgId);
 
         return next();
     } catch (error) {
