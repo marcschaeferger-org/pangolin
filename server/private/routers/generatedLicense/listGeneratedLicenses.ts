@@ -22,20 +22,27 @@ import {
     ListGeneratedLicenseKeysResponse
 } from "@server/routers/generatedLicense/types";
 
+function isValidOrgId(orgId: string): boolean {
+    return /^[A-Za-z0-9_-]{1,128}$/.test(orgId);
+}
+
 async function fetchLicenseKeys(orgId: string): Promise<any> {
     try {
-        const response = await fetch(
-            `${privateConfig.getRawPrivateConfig().server.fossorial_api}/api/v1/license-internal/enterprise/${orgId}/list`,
-            {
-                method: "GET",
-                headers: {
-                    "api-key":
-                        privateConfig.getRawPrivateConfig().server
-                            .fossorial_api_key!,
-                    "Content-Type": "application/json"
-                }
-            }
+        const baseUrl = privateConfig.getRawPrivateConfig().server.fossorial_api;
+        const url = new URL(
+            `/api/v1/license-internal/enterprise/${encodeURIComponent(orgId)}/list`,
+            baseUrl
         );
+
+        const response = await fetch(url.toString(), {
+            method: "GET",
+            headers: {
+                "api-key":
+                    privateConfig.getRawPrivateConfig().server
+                        .fossorial_api_key!,
+                "Content-Type": "application/json"
+            }
+        });
 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -62,6 +69,15 @@ export async function listSaasLicenseKeys(
                 createHttpError(
                     HttpCode.BAD_REQUEST,
                     "Organization ID is required"
+                )
+            );
+        }
+
+        if (!isValidOrgId(orgId)) {
+            return next(
+                createHttpError(
+                    HttpCode.BAD_REQUEST,
+                    "Organization ID format is invalid"
                 )
             );
         }
