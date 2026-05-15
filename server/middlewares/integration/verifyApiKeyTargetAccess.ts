@@ -22,7 +22,7 @@ export async function verifyApiKeyTargetAccess(
             );
         }
 
-        if (isNaN(targetId)) {
+        if (Number.isNaN(targetId)) {
             return next(
                 createHttpError(HttpCode.BAD_REQUEST, "Invalid target ID")
             );

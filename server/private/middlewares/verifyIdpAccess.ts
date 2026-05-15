@@ -28,8 +28,8 @@ export async function verifyIdpAccess(
         const userId = req.user!.userId;
         const idpIdRaw =
             getFirstString(req.params.idpId) ||
-            getFirstString(req.body.idpId) ||
-            getFirstString(req.query.idpId);
+            getFirstString(req.body?.idpId) ||
+            getFirstString(req.query?.idpId);
         const idpId = Number.parseInt(idpIdRaw ?? "", 10);
         const orgId = getFirstString(req.params.orgId);
 

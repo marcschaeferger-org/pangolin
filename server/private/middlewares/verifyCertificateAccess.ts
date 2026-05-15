@@ -29,14 +29,42 @@ export async function verifyCertificateAccess(
     try {
         // Assume user/org access is already verified
         const orgId = getFirstString(req.params.orgId);
-        const certId =
-            getFirstString(req.params.certId) ||
-            getFirstString(req.body?.certId) ||
-            getFirstString(req.query?.certId);
-        let domainId =
-            getFirstString(req.params.domainId) ||
-            getFirstString(req.body?.domainId) ||
-            getFirstString(req.query?.domainId);
+
+        const certIdFromParams = getFirstString(req.params?.certId);
+        const certIdFromBody = getFirstString(req.body?.certId);
+
+        if (
+            certIdFromParams &&
+            certIdFromBody &&
+            certIdFromParams !== certIdFromBody
+        ) {
+            return next(
+                createHttpError(
+                    HttpCode.BAD_REQUEST,
+                    "Certificate ID provided in both URL and body with different values"
+                )
+            );
+        }
+
+        const certId = certIdFromParams || certIdFromBody;
+
+        const domainIdFromParams = getFirstString(req.params?.domainId);
+        const domainIdFromBody = getFirstString(req.body?.domainId);
+
+        if (
+            domainIdFromParams &&
+            domainIdFromBody &&
+            domainIdFromParams !== domainIdFromBody
+        ) {
+            return next(
+                createHttpError(
+                    HttpCode.BAD_REQUEST,
+                    "Domain ID provided in both URL and body with different values"
+                )
+            );
+        }
+
+        let domainId = domainIdFromParams || domainIdFromBody;
 
         if (!orgId) {
             return next(

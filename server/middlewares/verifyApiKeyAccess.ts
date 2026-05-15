@@ -15,10 +15,23 @@ export async function verifyApiKeyAccess(
 ) {
     try {
         const userId = req.user!.userId;
-        const apiKeyId =
-            getFirstString(req.params.apiKeyId) ||
-            getFirstString(req.body.apiKeyId) ||
-            getFirstString(req.query.apiKeyId);
+        const apiKeyIdFromParams = getFirstString(req.params?.apiKeyId);
+        const apiKeyIdFromBody = getFirstString(req.body?.apiKeyId);
+
+        if (
+            apiKeyIdFromParams &&
+            apiKeyIdFromBody &&
+            apiKeyIdFromParams !== apiKeyIdFromBody
+        ) {
+            return next(
+                createHttpError(
+                    HttpCode.BAD_REQUEST,
+                    "API key ID provided in both URL and body with different values"
+                )
+            );
+        }
+
+        const apiKeyId = apiKeyIdFromParams || apiKeyIdFromBody;
         const orgId = getFirstString(req.params.orgId);
 
         if (!userId) {

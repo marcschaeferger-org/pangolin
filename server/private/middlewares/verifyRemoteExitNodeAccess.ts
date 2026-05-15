@@ -29,8 +29,8 @@ export async function verifyRemoteExitNodeAccess(
     const orgId = getFirstString(req.params.orgId);
     const remoteExitNodeId =
         getFirstString(req.params.remoteExitNodeId) ||
-        getFirstString(req.body.remoteExitNodeId) ||
-        getFirstString(req.query.remoteExitNodeId);
+        getFirstString(req.body?.remoteExitNodeId) ||
+        getFirstString(req.query?.remoteExitNodeId);
 
     if (!userId) {
         return next(

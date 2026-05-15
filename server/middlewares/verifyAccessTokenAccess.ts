@@ -94,7 +94,7 @@ export async function verifyAccessTokenAccess(
         }
 
         if (!req.userOrg) {
-            next(
+            return next(
                 createHttpError(
                     HttpCode.FORBIDDEN,
                     "User does not have access to this organization"
