@@ -1,4 +1,5 @@
 import { Router } from "express";
+import rateLimit from "express-rate-limit";
 import * as gerbil from "@server/routers/gerbil";
 import * as traefik from "@server/routers/traefik";
 import * as resource from "@server/routers/resource";
@@ -19,6 +20,14 @@ import * as browserTarget from "@server/routers/browserGatewayTarget";
 // Root routes
 export const internalRouter = Router();
 
+// Rate limiter for sensitive endpoints
+const sensitiveRateLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // max 100 requests per windowMs
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
 internalRouter.get("/", (_, res) => {
     res.status(HttpCode.OK).json({ message: "Healthy" });
 });
@@ -32,6 +41,7 @@ internalRouter.get(
 
 internalRouter.post(
     `/resource/:resourceId/get-exchange-token`,
+    sensitiveRateLimiter,
     verifySessionUserMiddleware,
     verifyResourceAccess,
     resource.getExchangeToken
