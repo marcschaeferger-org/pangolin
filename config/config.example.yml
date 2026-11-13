@@ -28,3 +28,21 @@ flags:
     disable_signup_without_invite: true
     disable_user_create_org: false
     allow_raw_resources: true
+
+# Optional: pull certificates from an HTTP endpoint instead of the local
+# acme.json (e.g. a Kubernetes controller exposing GET /api/v1/certificates).
+# The token file is re-read when it changes, so Secret rotation needs no restart.
+# Prefer the token file over the env fallback, which is visible in `kubectl describe`.
+# acme:
+#     acme_http_endpoint: "http://pangolin-controller.default.svc.cluster.local:9090/api/v1/certificates"
+#     acme_http_bearer_token_file: "/run/secrets/pangolin-certs/token"
+#     # acme_http_bearer_token: ""   # env fallback only (ACME_HTTP_BEARER_TOKEN)
+#     # PEM CA bundle trusted for the endpoint (replaces the default CAs
+#     # for this connection only).
+#     acme_http_ca_file: "/run/secrets/pangolin-certs/ca.crt"
+
+# Optional: declare the deployment platform. Unset keeps the default behavior;
+# currently drives startup diagnostics only (env: PANGOLIN_PLATFORM / PANGOLIN_CERT_SOURCE).
+# platform:
+#     type: kubernetes    # docker | kubernetes | openshift
+#     cert_source: http   # acme_json | http | files | external

@@ -5,6 +5,7 @@ import { z } from "zod";
 import stoi from "./stoi";
 import { getEnvOrYaml, readEnvOrFile } from "./getEnvOrYaml";
 import { getRunMode } from "./runMode";
+import { CERT_SOURCES, PLATFORM_TYPES } from "./platform";
 // type-only: offlineThresholds imports config, which imports this file
 import type { OfflineThresholds } from "@server/lib/offlineThresholds";
 
@@ -17,6 +18,24 @@ export const DEFAULT_OFFLINE_THRESHOLDS: OfflineThresholds = {
 };
 
 const portSchema = z.number().positive().gt(0).lte(65535);
+
+// ENV-or-YAML string restricted to `values`. Validation lives inside the
+// transform: a trailing .pipe(z.enum().optional()) would skip the ENV
+// lookup when the key is absent from the YAML.
+const envEnum =
+    <T extends readonly [string, ...string[]]>(envVar: string, values: T) =>
+    (val: string | undefined, ctx: z.RefinementCtx): T[number] | undefined => {
+        const v = getEnvOrYaml(envVar)(val);
+        if (v === undefined) return undefined;
+        if (!(values as readonly string[]).includes(v)) {
+            ctx.addIssue({
+                code: "custom",
+                message: `Invalid value "${v}" (${envVar}), expected one of: ${values.join(", ")}`
+            });
+            return z.NEVER;
+        }
+        return v as T[number];
+    };
 
 export const configSchema = z
     .object({
@@ -436,10 +455,40 @@ export const configSchema = z
                     .string()
                     .optional()
                     .default("config/letsencrypt/acme.json"),
-                acme_http_endpoint: z.string().optional(),
+                acme_http_endpoint: z
+                    .string()
+                    .optional()
+                    .transform(getEnvOrYaml("ACME_HTTP_ENDPOINT")),
+                // File with the bearer token for acme_http_endpoint. Re-read
+                // when it changes, so Secret rotation needs no restart.
+                acme_http_bearer_token_file: z.string().optional(),
+                // Fallback when no token file is set. Prefer the file: an env
+                // value is visible in e.g. `kubectl describe`.
+                acme_http_bearer_token: z
+                    .string()
+                    .optional()
+                    .transform(getEnvOrYaml("ACME_HTTP_BEARER_TOKEN")),
+                // PEM CA bundle trusted for acme_http_endpoint (replaces the
+                // default CAs for this connection only).
+                acme_http_ca_file: z.string().optional(),
                 sync_interval_ms: z.number().optional().default(5000)
             })
-            .optional(),
+            // prefault so ENV overrides apply without an `acme` block
+            .prefault({}),
+        // Deployment platform. Unset keeps the default behavior. Currently
+        // used for startup diagnostics only; ignored in the saas build.
+        platform: z
+            .object({
+                type: z
+                    .string()
+                    .optional()
+                    .transform(envEnum("PANGOLIN_PLATFORM", PLATFORM_TYPES)),
+                cert_source: z
+                    .string()
+                    .optional()
+                    .transform(envEnum("PANGOLIN_CERT_SOURCE", CERT_SOURCES))
+            })
+            .prefault({}),
         ai: z
             .object({
                 model_catalog: z

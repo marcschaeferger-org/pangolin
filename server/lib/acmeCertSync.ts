@@ -23,6 +23,11 @@ import {
 import { updateTargets } from "@server/routers/client/targets";
 import cache from "#dynamic/lib/cache";
 import { build } from "@server/build";
+import {
+    createHttpCertSource,
+    HttpCertSource
+} from "@server/lib/acmeHttpSource";
+import { runPlatformDiagnostics } from "@server/lib/platform";
 
 interface AcmeCert {
     domain: { main: string; sans?: string[] };
@@ -261,40 +266,9 @@ function detectWildcard(
     return { wildcard: false, wildcardSan: null };
 }
 
-interface HttpCert {
-    wildcard: boolean;
-    altName: string;
-    certName: string;
-    commonName: string;
-    certFile: string;
-    keyFile: string;
-}
-
-async function syncAcmeCertsFromHttp(endpoint: string): Promise<void> {
-    let response: Response;
-    try {
-        response = await fetch(endpoint);
-    } catch (err) {
-        logger.debug(
-            `acmeCertSync: could not reach HTTP endpoint ${endpoint}: ${err}`
-        );
-        return;
-    }
-
-    if (!response.ok) {
-        logger.debug(
-            `acmeCertSync: HTTP endpoint returned status ${response.status}`
-        );
-        return;
-    }
-
-    let httpCerts: HttpCert[];
-    try {
-        httpCerts = await response.json();
-    } catch (err) {
-        logger.debug(
-            `acmeCertSync: could not parse JSON from HTTP endpoint: ${err}`
-        );
+async function syncAcmeCertsFromHttp(source: HttpCertSource): Promise<void> {
+    const httpCerts = await source.fetch();
+    if (httpCerts === null) {
         return;
     }
 
@@ -795,6 +769,22 @@ export function initAcmeCertSync(): void {
 
     const configData = config.getRawConfig();
 
+    // Only reached outside the saas build (gate above).
+    runPlatformDiagnostics(configData, {
+        hasSslSiteResources: async () => {
+            const rows = await db
+                .select({ id: siteResources.siteResourceId })
+                .from(siteResources)
+                .where(eq(siteResources.ssl, true))
+                .limit(1);
+            return rows.length > 0;
+        },
+        pathExists: (p) => fs.existsSync(p),
+        log: logger
+    }).catch((err) => {
+        logger.debug(`platform: diagnostics failed: ${err}`);
+    });
+
     if (!configData.flags?.enable_acme_cert_sync) {
         logger.debug(
             `acmeCertSync: ACME cert sync is disabled by config flag, skipping`
@@ -816,9 +806,21 @@ export function initAcmeCertSync(): void {
         );
     }
 
+    const httpSource = httpEndpoint
+        ? createHttpCertSource(
+              {
+                  endpoint: httpEndpoint,
+                  bearerTokenFile: configData.acme?.acme_http_bearer_token_file,
+                  bearerToken: configData.acme?.acme_http_bearer_token,
+                  caFile: configData.acme?.acme_http_ca_file
+              },
+              logger
+          )
+        : null;
+
     const runSync = () => {
-        if (httpEndpoint) {
-            syncAcmeCertsFromHttp(httpEndpoint).catch((err) => {
+        if (httpSource) {
+            syncAcmeCertsFromHttp(httpSource).catch((err) => {
                 logger.error(`acmeCertSync: error during HTTP sync: ${err}`);
             });
         } else {
